@@ -1,6 +1,6 @@
 {
+  "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/buildfrom-video run build",
   "outputDirectory": "artifacts/buildfrom-video/dist/public",
-  "installCommand": "pnpm install",
   "framework": null
 }
