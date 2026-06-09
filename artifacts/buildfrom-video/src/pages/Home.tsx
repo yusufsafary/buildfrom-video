@@ -362,6 +362,17 @@ export default function Home() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <a
+            href="https://x.com/Buildfromvideo"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Follow @Buildfromvideo on X"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.631L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+            </svg>
+          </a>
           <button onClick={() => setDark(d => !d)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -386,6 +397,19 @@ export default function Home() {
 
         {/* ── Hero ───────────────────────────────────────────────────────── */}
         <section className="flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
+          <a
+            href="https://x.com/Buildfromvideo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-border bg-card text-xs font-mono text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all group"
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.631L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+            </svg>
+            Follow <span className="font-semibold text-foreground">@Buildfromvideo</span> on X
+            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </a>
+
           <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-8">
             Video → Repository
           </p>
@@ -561,7 +585,20 @@ export default function Home() {
       <footer className="border-t border-border px-6 py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span className="font-mono text-xs font-bold">BuildFrom.Video</span>
-          <span className="text-xs text-muted-foreground">Turn videos into repositories.</span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://x.com/Buildfromvideo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.631L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+              </svg>
+              @Buildfromvideo
+            </a>
+            <span className="text-xs text-muted-foreground">Turn videos into repositories.</span>
+          </div>
         </div>
       </footer>
 
