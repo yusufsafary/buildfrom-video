@@ -1,6 +1,8 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/public",
-  "framework": null
+  "installCommand": "pnpm install && cd api && npm install",
+  "buildCommand": "NODE_ENV=production pnpm --filter buildfrom-video build",
+  "outputDirectory": "artifacts/buildfrom-video/dist/public",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
