@@ -465,7 +465,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col pt-14">
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
+        <section className="dark isolate relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
           <VideoCollageBackground />
 
           <a
