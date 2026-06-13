@@ -205,6 +205,111 @@ async function pushToGithub(
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
+
+// ─── Transcript Summary Component ────────────────────────────────────────────
+function TranscriptSummaryView({ transcript, generated }: { transcript: TranscriptLine[]; generated: boolean }) {
+  if (!generated || transcript.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-10 text-center">
+        <p className="text-muted-foreground text-sm">Generate a repository first to see the transcript summary.</p>
+      </div>
+    );
+  }
+
+  const totalLines = transcript.length;
+  const lastEntry = transcript[transcript.length - 1];
+  const totalSecs = lastEntry?.start ?? 0;
+  const totalMins = Math.round(totalSecs / 60);
+  const wordsApprox = transcript.reduce((acc, l) => acc + l.text.split(" ").length, 0);
+
+  // Build 6 topic chunks from the transcript
+  const chunkSize = Math.ceil(totalLines / 6);
+  const chunks: { startTime: string; lines: TranscriptLine[] }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const slice = transcript.slice(i * chunkSize, (i + 1) * chunkSize);
+    if (slice.length > 0) chunks.push({ startTime: slice[0].t, lines: slice });
+  }
+
+  // Extract key sentences (those with tutorial keywords)
+  const keywords = ["let's", "we'll", "now", "next", "first", "then", "finally", "start", "build", "create", "add", "install"];
+  const keyLines = transcript.filter(l =>
+    keywords.some(kw => l.text.toLowerCase().includes(kw))
+  ).slice(0, 8);
+
+  return (
+    <div className="space-y-4">
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Duration", value: `~${totalMins} min` },
+          { label: "Transcript lines", value: totalLines.toString() },
+          { label: "Words (approx)", value: wordsApprox.toLocaleString() },
+        ].map(s => (
+          <div key={s.label} className="rounded-2xl border border-border bg-card p-4 text-center">
+            <p className="text-xl font-bold">{s.value}</p>
+            <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Key moments */}
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-border bg-muted/40">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Key Tutorial Moments</span>
+          </div>
+          <div className="p-4 space-y-2.5 max-h-72 overflow-y-auto">
+            {keyLines.length > 0 ? keyLines.map((line, i) => (
+              <div key={i} className="flex gap-3 items-start">
+                <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0 w-10 pt-0.5">{line.t}</span>
+                <p className="text-xs leading-relaxed text-foreground">{line.text}</p>
+              </div>
+            )) : (
+              <p className="text-xs text-muted-foreground">No key moments found.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Sections breakdown */}
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-border bg-muted/40">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Sections Overview</span>
+          </div>
+          <div className="p-4 space-y-3 max-h-72 overflow-y-auto">
+            {chunks.map((chunk, i) => (
+              <div key={i} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{chunk.startTime}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground/60">Section {i + 1}</span>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                  {chunk.lines.map(l => l.text).join(" ").substring(0, 160)}…
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Full transcript snippet */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center justify-between">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Full Transcript</span>
+          <span className="text-[10px] font-mono text-muted-foreground/60">{totalLines} lines</span>
+        </div>
+        <div className="p-4 overflow-y-auto space-y-1.5 max-h-64">
+          {transcript.map((line, i) => (
+            <div key={i} className="flex gap-3 text-xs font-mono">
+              <span className="text-muted-foreground shrink-0 w-10">{line.t}</span>
+              <span className="text-muted-foreground leading-relaxed">{line.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
@@ -213,6 +318,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [activeFile, setActiveFile] = useState("README.md");
+  const [activeOutputTab, setActiveOutputTab] = useState<"repo" | "summary">("repo");
   const demoRef = useRef<HTMLDivElement>(null);
 
   // Real data from API
@@ -465,21 +571,21 @@ export default function Home() {
       <main className="flex-1 flex flex-col pt-14">
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="isolate relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center" style={{ "--foreground": "220 9% 95%", "--muted-foreground": "220 9% 65%", "--card": "220 15% 9%", "--card-foreground": "220 9% 95%", "--border": "220 13% 20%", "--muted": "220 14% 14%", "--background": "220 16% 6%" } as React.CSSProperties}>
+        <section className="isolate relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center" style={{ color: "white", "--foreground": "220 9% 95%", "--muted-foreground": "220 9% 65%", "--card": "220 15% 9%", "--card-foreground": "220 9% 95%", "--border": "220 13% 20%", "--muted": "220 14% 14%", "--background": "220 16% 6%" } as React.CSSProperties}>
           <VideoCollageBackground />
 
           <a
             href="https://x.com/AlexanderRothr"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-border bg-card text-xs font-mono text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all group"
+            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/25 bg-white/10 text-xs font-mono text-white/70 hover:text-white hover:border-white/40 transition-all group"
           >
             <XIcon />
-            Follow <span className="font-semibold text-foreground">@AlexanderRothr</span> on X
+            Follow <span className="font-semibold text-white">@AlexanderRothr</span> on X
             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
 
-          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-8">
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-white/55 mb-8">
             Video → Repository
           </p>
 
@@ -487,7 +593,7 @@ export default function Home() {
             Turn Any Coding Video Into a Repository
           </h1>
 
-          <p className="text-muted-foreground text-sm sm:text-base max-w-md mb-12 leading-relaxed">
+          <p className="text-white/75 text-sm sm:text-base max-w-md mb-12 leading-relaxed">
             Paste a YouTube tutorial URL. We extract the real transcript, analyze the stack, and generate a complete, runnable project — ready to push to GitHub.
           </p>
 
@@ -556,12 +662,26 @@ export default function Home() {
         {/* ── Workspace ────────────────────────────────────────────────────── */}
         <section ref={demoRef} className="px-5 py-20 bg-muted/30 border-t border-border">
           <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-10">
+              <div className="flex-1">
                 <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Workspace</p>
                 <h2 className="text-2xl font-bold">
                   {generated ? "Generated repository" : "Live preview"}
                 </h2>
+              </div>
+              <div className="flex items-center gap-1 bg-muted rounded-xl p-1 self-start">
+                <button
+                  onClick={() => setActiveOutputTab("repo")}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${activeOutputTab === "repo" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Repository
+                </button>
+                <button
+                  onClick={() => setActiveOutputTab("summary")}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${activeOutputTab === "summary" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Transcript Summary
+                </button>
               </div>
               {generated && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-full">
@@ -571,6 +691,9 @@ export default function Home() {
               )}
             </div>
 
+            {activeOutputTab === "summary" ? (
+              <TranscriptSummaryView transcript={transcript} generated={generated} />
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
               {/* Transcript */}
@@ -633,6 +756,8 @@ export default function Home() {
               </div>
             </div>
 
+            </div>
+            )}
             {/* Export actions */}
             <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <button
