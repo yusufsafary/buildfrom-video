@@ -755,8 +755,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            </div>
             )}
             {/* Export actions */}
             <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
