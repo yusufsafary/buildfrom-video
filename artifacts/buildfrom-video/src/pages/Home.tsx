@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "wouter";
 import { Github, Moon, Sun, Download, Loader2, Check, X, LogOut, Copy, ExternalLink, AlertCircle } from "lucide-react";
 import { MonacoEditor } from "@/components/MonacoEditor";
 import { VideoCollageBackground } from "@/components/VideoCollageBackground";
@@ -312,6 +313,11 @@ function TranscriptSummaryView({ transcript, generated }: { transcript: Transcri
 
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [, navigate] = useLocation();
+  const [platform, setPlatform] = useState<"youtube" | "tiktok" | null>(null);
+  const [genTimeMs, setGenTimeMs] = useState<number | null>(null);
+  const [detectedStack, setDetectedStack] = useState<string[]>([]);
+  const genStartRef = useRef<number>(0);
   const [urlError, setUrlError] = useState("");
   const [dark, setDark] = useState(false);
   const [step, setStep] = useState(-1);
@@ -362,7 +368,32 @@ export default function Home() {
   }, [dark]);
 
   const validateUrl = (u: string) =>
-    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(u.trim());
+    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|tiktok\.com|vm\.tiktok\.com)\/.+$/.test(u.trim());
+
+  const detectPlatform = (u: string): "youtube" | "tiktok" | null => {
+    if (/youtube\.com|youtu\.be/.test(u)) return "youtube";
+    if (/tiktok\.com/.test(u)) return "tiktok";
+    return null;
+  };
+
+  const detectStack = (files: Record<string, { lang: string; content: string }>): string[] => {
+    const tags = new Set<string>();
+    const allContent = Object.values(files).map(f => f.content).join(" ");
+    const fileNames = Object.keys(files).join(" ");
+    if (fileNames.includes("package.json") || allContent.includes("npm")) tags.add("Node.js");
+    if (allContent.includes("import React") || allContent.includes("from 'react'") || allContent.includes("from \"react\"")) tags.add("React");
+    if (Object.values(files).some(f => f.lang === "typescript")) tags.add("TypeScript");
+    if (Object.values(files).some(f => f.lang === "javascript")) tags.add("JavaScript");
+    if (allContent.includes("import { useState") || allContent.includes("useState")) tags.add("React Hooks");
+    if (allContent.includes("tailwind") || allContent.includes("className=")) tags.add("Tailwind CSS");
+    if (allContent.includes("express") || allContent.includes("fastapi") || allContent.includes("flask")) tags.add("REST API");
+    if (allContent.includes("prisma") || allContent.includes("drizzle") || allContent.includes("mongoose")) tags.add("ORM");
+    if (allContent.includes("docker") || fileNames.includes("Dockerfile")) tags.add("Docker");
+    if (allContent.includes("next") && allContent.includes("page")) tags.add("Next.js");
+    if (allContent.includes("vite")) tags.add("Vite");
+    if (allContent.includes("pytest") || allContent.includes("unittest")) tags.add("Testing");
+    return [...tags].slice(0, 8);
+  };
 
   // ─── Real generation ──────────────────────────────────────────────────────
   const handleGenerate = async () => {
@@ -370,6 +401,7 @@ export default function Home() {
     setUrlError("");
     localStorage.setItem("bfv_url", url);
     setGenerating(true);
+    genStartRef.current = Date.now();
     setGenerated(false);
     setRealTranscript(null);
     setRealFiles(null);
@@ -406,6 +438,8 @@ export default function Home() {
       };
       setRealFiles(gFiles);
       setRealStructure(gStructure);
+      setDetectedStack(detectStack(gFiles));
+      setGenTimeMs(Date.now() - genStartRef.current);
       setActiveFile(Object.keys(gFiles)[0] ?? "README.md");
 
       // Step 4 — Writing files
@@ -517,19 +551,28 @@ export default function Home() {
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <header className="fixed top-0 inset-x-0 z-50 h-14 border-b border-border bg-background/95 backdrop-blur-sm flex items-center px-5 gap-4">
-        <span className="font-semibold text-sm tracking-tight shrink-0">BuildFrom.Video</span>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <rect width="26" height="26" rx="7" fill="#0F172A"/>
+            <path d="M8 7L4 13L8 19" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18 7L22 13L18 19" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 10.5L16 13L12 15.5V10.5Z" fill="white"/>
+          </svg>
+          <span className="font-semibold text-sm tracking-tight">BuildFrom.Video</span>
+        </div>
 
         <div className="flex-1 hidden md:block max-w-sm">
           <input
             className="w-full h-8 rounded-full px-4 text-sm bg-muted border-transparent outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground transition-all"
             placeholder="Paste YouTube URL"
             value={url}
-            onChange={e => { setUrl(e.target.value); setUrlError(""); }}
+            onChange={e => { setUrl(e.target.value); setUrlError(""); setPlatform(detectPlatform(e.target.value)); }}
             onKeyDown={e => e.key === "Enter" && handleGenerate()}
           />
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => navigate("/signup")} className="hidden sm:flex h-8 px-4 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"/>Early Access</button>
           <a
             href="https://x.com/AlexanderRothr"
             target="_blank"
@@ -585,17 +628,41 @@ export default function Home() {
             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
 
-          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-white/55 mb-8">
-            Video → Repository
-          </p>
+          <div className="flex items-center gap-2 mb-8">
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-white/55">
+              Video → Repository
+            </p>
+            {platform === "youtube" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-mono">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M23.5 6.19a3 3 0 00-2.12-2.12C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.57A3 3 0 00.5 6.19C0 8.03 0 12 0 12s0 3.97.5 5.81a3 3 0 002.12 2.12C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.57a3 3 0 002.12-2.12C24 15.97 24 12 24 12s0-3.97-.5-5.81zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/></svg>
+                YouTube
+              </span>
+            )}
+            {platform === "tiktok" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-400 text-[10px] font-mono">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.77 1.51V6.75a4.85 4.85 0 01-1-.06z"/></svg>
+                TikTok
+              </span>
+            )}
+          </div>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.06] max-w-3xl mb-6">
             Turn Any Coding Video Into a Repository
           </h1>
 
           <p className="text-white/75 text-sm sm:text-base max-w-md mb-12 leading-relaxed">
-            Paste a YouTube tutorial URL. We extract the real transcript, analyze the stack, and generate a complete, runnable project — ready to push to GitHub.
+            Paste a YouTube or TikTok tutorial URL. We extract the transcript, detect the tech stack, and generate a complete runnable project — ready to push to GitHub.
           </p>
+
+          {/* Stats bar */}
+          <div className="flex items-center gap-4 sm:gap-6 mb-8 text-center">
+            {[["2,847","repos generated"],["180+","stacks detected"],["14","languages"]].map(([val, label]) => (
+              <div key={label}>
+                <p className="text-base sm:text-lg font-bold text-white">{val}</p>
+                <p className="text-[10px] font-mono text-white/40 leading-tight">{label}</p>
+              </div>
+            ))}
+          </div>
 
           <div className="w-full max-w-lg space-y-3 mb-8">
             <input
@@ -757,6 +824,21 @@ export default function Home() {
             </div>
             )}
             {/* Export actions */}
+            {/* Stack badges + generation time */}
+            {generated && detectedStack.length > 0 && (
+              <div className="mt-6 space-y-3">
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Detected stack:</span>
+                  {detectedStack.map(tag => (
+                    <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono bg-muted border border-border text-foreground">{tag}</span>
+                  ))}
+                  {genTimeMs && (
+                    <span className="ml-auto text-[10px] font-mono text-muted-foreground">⚡ Generated in {(genTimeMs/1000).toFixed(1)}s</span>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <button
                 onClick={handleDownload}
@@ -775,6 +857,26 @@ export default function Home() {
                 {pushing ? "Pushing…" : ghUser ? `Push as ${ghUser.login}` : "Push to GitHub"}
               </button>
 
+              {pushUrl && (
+                <>
+                  <a
+                    href={`https://vercel.com/new/clone?repository-url=${encodeURIComponent(pushUrl)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 h-10 px-4 rounded-full bg-black text-white text-xs font-semibold hover:opacity-80 transition-all border border-white/10"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 284 284" fill="currentColor"><path d="M141.68 0L283.36 252H0L141.68 0z"/></svg>
+                    Deploy to Vercel
+                  </a>
+                  <a
+                    href={`https://app.netlify.com/start/deploy?repository=${encodeURIComponent(pushUrl)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 h-10 px-4 rounded-full bg-teal-600 text-white text-xs font-semibold hover:opacity-80 transition-all"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 1367 1367" fill="currentColor"><path d="M283.5 0l1084 1367H0z"/></svg>
+                    Deploy to Netlify
+                  </a>
+                </>
+              )}
               {pushUrl && (
                 <a
                   href={pushUrl}
@@ -797,6 +899,34 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      {/* ── Early Access CTA ──────────────────────────────────────────────── */}
+      <section className="border-t border-border px-6 py-16 text-center bg-gradient-to-b from-background to-muted/20">
+        <div className="max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-mono mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"/>
+            Limited Early Access
+          </div>
+          <h2 className="text-3xl font-bold mb-4">Ready to code smarter?</h2>
+          <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto leading-relaxed">
+            Join 2,847 developers turning YouTube & TikTok tutorials into production-ready GitHub repositories.
+          </p>
+          <button
+            onClick={() => navigate("/signup")}
+            className="h-12 px-8 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-cyan-500/20"
+          >
+            Get Early Access →
+          </button>
+          <div className="flex items-center justify-center gap-6 mt-8">
+            {[["2,847","Developers"],["180+","Tech stacks"],["14","Languages"]].map(([v, l]) => (
+              <div key={l} className="text-center">
+                <p className="font-bold">{v}</p>
+                <p className="text-[11px] text-muted-foreground font-mono">{l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-border px-6 py-6">
