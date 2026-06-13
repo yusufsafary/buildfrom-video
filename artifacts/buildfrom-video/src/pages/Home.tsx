@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Github, Moon, Sun, Download, Loader2, Check, X, LogOut, Copy, ExternalLink, AlertCircle } from "lucide-react";
 import { MonacoEditor } from "@/components/MonacoEditor";
+import { VideoCollageBackground } from "@/components/VideoCollageBackground";
 
 // ─── GitHub App Config ────────────────────────────────────────────────────────
 const GITHUB_CLIENT_ID = "Ov23li5RgpdnORSSM76c";
@@ -464,7 +465,8 @@ export default function Home() {
       <main className="flex-1 flex flex-col pt-14">
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
+        <section className="relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
+          <VideoCollageBackground />
 
           <a
             href="https://x.com/AlexanderRothr"
