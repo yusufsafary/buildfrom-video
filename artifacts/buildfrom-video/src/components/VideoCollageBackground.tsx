@@ -1,4 +1,3 @@
-// Real YouTube thumbnails — uses hqdefault.jpg from YouTube CDN (public, no API key needed)
 const VIDEOS = [
   { id: "PkZNo7MFNFg", title: "Learn JavaScript – Full Course", channel: "freeCodeCamp", duration: "3:26:42" },
   { id: "rfscVS0vtbw", title: "Learn CSS in 20 Minutes", channel: "Web Dev Simplified", duration: "20:01" },
@@ -19,7 +18,6 @@ const VIDEOS = [
 ];
 
 const ROTATIONS = ["-1.5deg", "1deg", "-0.8deg", "1.8deg", "-1.2deg", "0.9deg"];
-// 4 columns, outer two columns scroll, inner area stays lighter
 const COL_CONFIG = [
   { duration: 30, reverse: false },
   { duration: 24, reverse: true  },
@@ -49,10 +47,10 @@ export function VideoCollageBackground() {
         .vcb-col { display: flex; flex-direction: column; gap: 10px; }
       `}</style>
 
-      {/* Card columns — 4 cols, capped opacity so content stays readable */}
+      {/* Cards — low opacity so they stay ambient */}
       <div
         className="absolute inset-0 flex gap-3 items-start justify-center"
-        style={{ top: -30, padding: "0 4px", opacity: 0.45 }}
+        style={{ top: -30, padding: "0 4px", opacity: 0.28 }}
       >
         {COL_CONFIG.map((cfg, colIdx) => {
           const cards = makeCol(colIdx);
@@ -80,7 +78,6 @@ export function VideoCollageBackground() {
                         background: "#111",
                       }}
                     >
-                      {/* Real YouTube thumbnail */}
                       <img
                         src={thumbUrl}
                         alt={card.video.title}
@@ -88,19 +85,15 @@ export function VideoCollageBackground() {
                         loading="lazy"
                         decoding="async"
                       />
-                      {/* Bottom gradient for readability */}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)" }} />
-                      {/* Play button */}
                       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "1.5px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <div style={{ width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "9px solid rgba(255,255,255,0.95)", marginLeft: 2 }} />
                         </div>
                       </div>
-                      {/* Duration pill */}
                       <div style={{ position: "absolute", bottom: 24, right: 5, background: "rgba(0,0,0,0.85)", color: "#fff", fontSize: 7.5, fontFamily: "monospace", padding: "1.5px 4px", borderRadius: 3 }}>
                         {card.video.duration}
                       </div>
-                      {/* Channel + title */}
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 7px 5px" }}>
                         <p style={{ color: "#fff", fontSize: 7, fontWeight: 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.video.title}</p>
                         <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 6, margin: "1.5px 0 0" }}>{card.video.channel}</p>
@@ -114,23 +107,27 @@ export function VideoCollageBackground() {
         })}
       </div>
 
-      {/* ── Overlay system: strong center, fade at edges ───────────────────── */}
+      {/* ── LIGHT MODE: very strong solid white center ──────────────── */}
+      {/* Solid white block covering 70% of center */}
+      <div className="dark:hidden" style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse 70% 65% at 50% 48%, #ffffff 0%, #ffffff 45%, rgba(255,255,255,0.96) 60%, rgba(255,255,255,0.7) 80%, transparent 100%)"
+      }} />
+      {/* Hard top/bottom/side fades */}
+      <div className="dark:hidden" style={{ position: "absolute", inset: "0 0 auto 0", height: 100, background: "linear-gradient(to bottom, #ffffff 0%, transparent 100%)" }} />
+      <div className="dark:hidden" style={{ position: "absolute", inset: "auto 0 0 0", height: 100, background: "linear-gradient(to top, #ffffff 0%, transparent 100%)" }} />
+      <div className="dark:hidden" style={{ position: "absolute", inset: "0 auto 0 0", width: 32, background: "#ffffff" }} />
+      <div className="dark:hidden" style={{ position: "absolute", inset: "0 0 0 auto", width: 32, background: "#ffffff" }} />
 
-      {/* Light mode overlays */}
-      <div className="dark:hidden" style={{ position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse 55% 55% at 50% 48%, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.88) 35%, rgba(255,255,255,0.55) 65%, transparent 100%)" }} />
-      <div className="dark:hidden" style={{ position: "absolute", inset: "0 0 auto 0", height: 120, background: "linear-gradient(to bottom, #ffffff 0%, transparent 100%)" }} />
-      <div className="dark:hidden" style={{ position: "absolute", inset: "auto 0 0 0", height: 120, background: "linear-gradient(to top, #ffffff 0%, transparent 100%)" }} />
-      <div className="dark:hidden" style={{ position: "absolute", inset: "0 auto 0 0", width: 48, background: "linear-gradient(to right, #ffffff 0%, transparent 100%)" }} />
-      <div className="dark:hidden" style={{ position: "absolute", inset: "0 0 0 auto", width: 48, background: "linear-gradient(to left, #ffffff 0%, transparent 100%)" }} />
-
-      {/* Dark mode overlays */}
-      <div className="hidden dark:block" style={{ position: "absolute", inset: 0,
-        background: "radial-gradient(ellipse 55% 55% at 50% 48%, rgba(9,9,11,0.97) 0%, rgba(9,9,11,0.88) 35%, rgba(9,9,11,0.55) 65%, transparent 100%)" }} />
-      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 0 auto 0", height: 120, background: "linear-gradient(to bottom, #09090b 0%, transparent 100%)" }} />
-      <div className="hidden dark:block" style={{ position: "absolute", inset: "auto 0 0 0", height: 120, background: "linear-gradient(to top, #09090b 0%, transparent 100%)" }} />
-      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 auto 0 0", width: 48, background: "linear-gradient(to right, #09090b 0%, transparent 100%)" }} />
-      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 0 0 auto", width: 48, background: "linear-gradient(to left, #09090b 0%, transparent 100%)" }} />
+      {/* ── DARK MODE: very strong solid dark center ────────────────── */}
+      <div className="hidden dark:block" style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse 70% 65% at 50% 48%, #09090b 0%, #09090b 45%, rgba(9,9,11,0.96) 60%, rgba(9,9,11,0.7) 80%, transparent 100%)"
+      }} />
+      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 0 auto 0", height: 100, background: "linear-gradient(to bottom, #09090b 0%, transparent 100%)" }} />
+      <div className="hidden dark:block" style={{ position: "absolute", inset: "auto 0 0 0", height: 100, background: "linear-gradient(to top, #09090b 0%, transparent 100%)" }} />
+      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 auto 0 0", width: 32, background: "#09090b" }} />
+      <div className="hidden dark:block" style={{ position: "absolute", inset: "0 0 0 auto", width: 32, background: "#09090b" }} />
     </div>
   );
 }
