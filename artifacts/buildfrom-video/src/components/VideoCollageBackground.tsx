@@ -46,10 +46,9 @@ export function VideoCollageBackground() {
         .vcb-col { display: flex; flex-direction: column; gap: 10px; }
       `}</style>
 
-      {/* Thumbnail columns — visible at high opacity */}
       <div
         className="absolute inset-0 flex gap-3 items-start justify-center"
-        style={{ top: -30, padding: "0 4px", opacity: 0.85 }}
+        style={{ top: -30, padding: "0 4px", opacity: 0.9 }}
       >
         {COL_CONFIG.map((cfg, colIdx) => {
           const cards = makeCol(colIdx);
@@ -57,9 +56,7 @@ export function VideoCollageBackground() {
             <div key={colIdx} className="vcb-col" style={{ width: 168, flexShrink: 0 }}>
               <div
                 className="vcb-col"
-                style={{
-                  animation: `${cfg.reverse ? "vcb-down" : "vcb-up"} ${cfg.duration}s linear infinite`,
-                }}
+                style={{ animation: `${cfg.reverse ? "vcb-down" : "vcb-up"} ${cfg.duration}s linear infinite` }}
               >
                 {[...cards, ...cards].map((card, i) => {
                   const rot = ROTATIONS[(card.globalIdx + i) % ROTATIONS.length];
@@ -67,37 +64,26 @@ export function VideoCollageBackground() {
                     <div
                       key={i}
                       style={{
-                        position: "relative",
-                        width: 168,
-                        height: 100,
-                        borderRadius: 10,
-                        overflow: "hidden",
-                        transform: `rotate(${rot})`,
-                        boxShadow: "0 4px 18px rgba(0,0,0,0.5)",
-                        flexShrink: 0,
-                        background: "#111",
+                        position: "relative", width: 168, height: 100, borderRadius: 10,
+                        overflow: "hidden", transform: `rotate(${rot})`,
+                        boxShadow: "0 4px 18px rgba(0,0,0,0.5)", flexShrink: 0, background: "#111",
                       }}
                     >
                       <img
                         src={`https://img.youtube.com/vi/${card.video.id}/hqdefault.jpg`}
                         alt={card.video.title}
                         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        loading="lazy"
-                        decoding="async"
+                        loading="lazy" decoding="async"
                       />
-                      {/* gradient fade at bottom of each card */}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)" }} />
-                      {/* play button */}
                       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "1.5px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <div style={{ width: 0, height: 0, borderTop: "4.5px solid transparent", borderBottom: "4.5px solid transparent", borderLeft: "8px solid rgba(255,255,255,0.95)", marginLeft: 2 }} />
                         </div>
                       </div>
-                      {/* duration badge */}
                       <div style={{ position: "absolute", bottom: 22, right: 5, background: "rgba(0,0,0,0.85)", color: "#fff", fontSize: 7, fontFamily: "monospace", padding: "1px 3px", borderRadius: 3 }}>
                         {card.video.duration}
                       </div>
-                      {/* title + channel */}
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 6px 4px" }}>
                         <p style={{ color: "#fff", fontSize: 6.5, fontWeight: 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.video.title}</p>
                         <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 6, margin: "1px 0 0" }}>{card.video.channel}</p>
@@ -111,14 +97,8 @@ export function VideoCollageBackground() {
         })}
       </div>
 
-      {/* Dark scrim — 50% opacity so thumbnails stay clearly visible, white text readable on top */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(5, 5, 15, 0.52)",
-        }}
-      />
+      {/* Dark scrim 68% — thumbnails clearly visible, white text readable on top */}
+      <div style={{ position: "absolute", inset: 0, background: "rgba(4, 4, 12, 0.68)" }} />
     </div>
   );
 }
