@@ -465,7 +465,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col pt-14">
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="dark isolate relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center">
+        <section className="isolate relative overflow-hidden flex flex-col items-center justify-center min-h-[88vh] px-5 py-16 text-center" style={{ "--foreground": "220 9% 95%", "--muted-foreground": "220 9% 65%", "--card": "220 15% 9%", "--card-foreground": "220 9% 95%", "--border": "220 13% 20%", "--muted": "220 14% 14%", "--background": "220 16% 6%" } as React.CSSProperties}>
           <VideoCollageBackground />
 
           <a
